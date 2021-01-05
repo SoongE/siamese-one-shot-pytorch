@@ -6,7 +6,7 @@ from glob import glob
 
 # download omniglot dataset
 def download_data():
-    BASEDIR = os.getcwd() + '/data'
+    BASEDIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 
     if not os.path.exists(BASEDIR):
         os.mkdir(BASEDIR)
