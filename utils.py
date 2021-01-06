@@ -1,7 +1,54 @@
+import json
 import os
-import wget
-from zipfile import ZipFile
+import shutil
 from glob import glob
+from zipfile import ZipFile
+
+import wget
+
+
+class AverageMeter(object):
+    """
+    Computes and stores the average and
+    current value.
+    """
+
+    def __init__(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def prepare_dirs(config):
+    for path in [config.ckpt_dir, config.logs_dir, config.plot_dir]:
+        path = os.path.join(path, config.num_model)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        if config.flush:
+            shutil.rmtree(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+
+def save_config(config):
+    model_dir = os.path.join(config.ckpt_dir, config.num_model)
+    param_path = os.path.join(model_dir, 'params.json')
+
+    if not os.path.isfile(param_path):
+        print(f"Save params in {param_path}")
+
+        all_params = config.__dict__
+        with open(param_path, 'w') as fp:
+            json.dump(all_params, fp, indent=4, sort_keys=True)
+    else:
+        raise ValueError
 
 
 # download omniglot dataset
