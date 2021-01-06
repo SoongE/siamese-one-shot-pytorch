@@ -97,8 +97,6 @@ class OmniglotTest:
         return self.trials * self.way
 
     def __getitem__(self, index):
-        rng = Random(self.seed + index)
-
         # get image pair from same class
         if index % self.way == 0:
             label = 1
