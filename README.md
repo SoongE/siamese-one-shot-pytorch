@@ -12,8 +12,14 @@ There are 4 way to verify the `Omniglot Dataset`. 3 Few shot Learning, 1 One Sho
 
 1. Download **Omniglot Dataset**
 
-   ```python
-   python download_data.py
+   ```bash
+   python main.py downlaod-data
+   ```
+
+2. Run 
+
+   ```
+   python main.py run
    ```
 
    
