@@ -12,10 +12,6 @@ from torchvision import datasets as dset, transforms
 
 def get_train_validation_loader(data_dir, batch_size, num_train, augment, way, trials, shuffle=False, seed=0,
                                 num_workers=4, pin_memory=False):
-    if torch.cuda.is_available():
-        num_workers = 1
-        pin_memory = True
-
     train_dir = os.path.join(data_dir, 'train')
     val_dir = os.path.join(data_dir, 'val')
 
@@ -32,10 +28,6 @@ def get_train_validation_loader(data_dir, batch_size, num_train, augment, way, t
 
 
 def get_test_loader(data_dir, way, trials, seed=0, num_workers=4, pin_memory=False):
-    if torch.cuda.is_available():
-        num_workers = 1
-        pin_memory = True
-
     test_dir = os.path.join(data_dir, 'test')
     test_dataset = dset.ImageFolder(test_dir)
     test_dataset = OmniglotTest(test_dataset, trials=trials, way=way, seed=seed)
