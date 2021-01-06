@@ -1,7 +1,6 @@
 import argparse
 
 import torch
-from pprint import pprint as pp
 
 
 def str2bool(v):
@@ -29,7 +28,7 @@ data_arg.add_argument('--num_train', type=int, default=90000,
                       help='# of images in train dataset')
 data_arg.add_argument('--batch_size', type=int, default=64,
                       help='# of images in each batch of data')
-data_arg.add_argument('--num_workers', type=int, default=1,
+data_arg.add_argument('--num_workers', type=int, default=4,
                       help='# of subprocesses to use for data loading')
 data_arg.add_argument('--shuffle', type=str2bool, default=True,
                       help='Whether to shuffle the dataset between epochs')
@@ -38,8 +37,6 @@ data_arg.add_argument('--augment', type=str2bool, default=True,
 
 # training params
 train_arg = parser.add_argument_group('Training Params')
-train_arg.add_argument('--is_train', type=str2bool, default=True,
-                       help='Whether to train or test the model')
 train_arg.add_argument('--epochs', type=int, default=200,
                        help='# of epochs to train for')
 train_arg.add_argument('--init_momentum', type=float, default=0.5,
@@ -75,13 +72,13 @@ misc_arg.add_argument('--resume', type=str2bool, default=False,
 
 def get_config():
     config = parser.parse_args()
+
+    assert config.num_workers > 0, f"number of worker must be >= 1, you are {config.num_workers}"
+    assert config.num_model > 0, f"number of model must be >= 1, you are {config.num_model}"
+
+    if config.use_gpu and torch.cuda.is_available():
+        torch.cuda.manual_seed(config.random_seed)
+        config.num_workers: 1
+        config.pin_memory: True
+
     return config
-
-
-if __name__ == '__main__':
-    config = get_config()
-
-    if torch.cuda.is_available():
-        config.num_workers = 1
-
-    pp(vars(config))
