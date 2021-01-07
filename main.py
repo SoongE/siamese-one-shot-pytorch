@@ -3,6 +3,7 @@ from fire import Fire
 from config_make import get_config
 from trainer import Trainer
 from utils import *
+from data_prepare import *
 
 
 def print_status(string):
@@ -46,7 +47,7 @@ def test(config=None, trainer=None):
 
 # running all process. download data, data set, data loader, train, validation, test
 def run():
-    download_omniglot_data()
+    download_data()
 
     # Make options
     config = get_config()
@@ -62,8 +63,18 @@ def run():
 
 
 def download_data():
+    print("Download omniglot dataset...", end="")
     download_omniglot_data()
+
+    print("Prepare dataset...", end="")
+    prepare_data()
+
+    print("DONE")
+
+
+def testing():
+    print("HELLO")
 
 
 if __name__ == '__main__':
-    Fire({"run": run, "download-data": download_data, "train": train, "test": test})
+    Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
