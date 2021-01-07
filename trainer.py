@@ -1,9 +1,9 @@
 import os
 import shutil
+from glob import glob
 
 import torch
 import torch.optim as optim
-from torch.nn.functional import sigmoid
 from tqdm import tqdm
 
 from data_loader import get_train_validation_loader, get_test_loader
@@ -27,10 +27,6 @@ class Trainer(object):
         Args
         ----
         - config: object containing command line arguments.
-        - data_loader: data iterator.
-        - layer_hyperparams: dict containing layer-wise hyperparameters
-          such as the initial learning rate, the end momentum, and the l2
-          regularization strength.
         """
         self.config = config
 
@@ -44,7 +40,8 @@ class Trainer(object):
                                                                  self.config.num_train,
                                                                  self.config.augment, self.config.way,
                                                                  self.config.valid_trials,
-                                                                 self.config.shuffle, self.config.seed)
+                                                                 self.config.shuffle, self.config.seed,
+                                                                 self.config.num_workers, self.config.pin_memory)
 
         # Model, Optimizer, criterion
         model = SiameseNet()
@@ -66,23 +63,25 @@ class Trainer(object):
         train_file = open(os.path.join(self.logs_dir, 'train.csv'), 'w')
         valid_file = open(os.path.join(self.logs_dir, 'valid.csv'), 'w')
 
+        best_epoch = 0
         counter = 0
         num_train = len(train_loader.dataset)
         num_valid = valid_loader.dataset.trials
-        print(f"\n[*] Train on {num_train} sample pairs, validate on {num_valid} trials")
+        print(f"[*] Train on {num_train} sample pairs, validate on {num_valid} trials")
 
-        # Train
-        for epoch in tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs):
+        # Train & Validation
+        main_pbar = tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs, ncols=100, desc="Process")
+        for epoch in main_pbar:
             train_losses = AverageMeter()
 
             # TRAIN
             model.train()
-            pbar = tqdm(enumerate(train_loader), total=num_train, desc="Train")
-            for i, (x1, x2, y) in pbar:
+            train_pbar = tqdm(enumerate(train_loader), total=num_train, desc="Train", ncols=100)
+            for i, (x1, x2, y) in train_pbar:
                 if self.config.use_gpu:
                     x1, x2, y = x1.cuda(), x2.cuda(), y.cuda()
                 out = model(x1, x2)
-                loss = criterion(out, y)
+                loss = criterion(out, y.unsqueeze(1))
 
                 # compute gradients and update
                 optimizer.zero_grad()
@@ -91,62 +90,68 @@ class Trainer(object):
 
                 # store batch statistics
                 batch_size = x1.shape[0]
-                train_losses.update(loss.data[0], batch_size)
+                train_losses.update(loss.item(), batch_size)
 
                 # log loss
                 train_file.write(f'{(epoch * len(train_loader)) + i},{train_losses.val}\n')
-                pbar.set_postfix(f"loss: {train_losses.val:.3f}")
+                train_pbar.set_postfix_str(f"loss: {train_losses.val:0.3f}")
+
+            main_pbar.refresh()
 
             # VALIDATION
             model.eval()
-            with torch.no_grad:
-                correct = 0
-                pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid")
-                for i, (x1, x2, y) in pbar:
-                    if self.config.use_gpu:
-                        x1, x2 = x1.cuda(), x2.cuda()
+            correct = 0
+            valid_acc = 0
+            valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100)
+            for i, (x1, x2, y) in valid_pbar:
+                if self.config.use_gpu:
+                    x1, x2 = x1.cuda(), x2.cuda()
 
+                with torch.no_grad():
                     # compute log probabilities
                     out = model(x1, x2)
-                    log_probas = sigmoid(out)
+                    log_probas = torch.sigmoid(out)
 
-                    # get index of max log prob
-                    pred = log_probas.data.max(0)[1][0]
-                    if pred == 0:
-                        correct += 1
+                # get index of max log prob
+                pred = log_probas.data.max(0)[1][0]
+                if pred == 0:
+                    correct += 1
 
                 # compute acc and log
-                valid_acc = (100. * correct) / num_valid
+                valid_acc = correct / num_valid
                 valid_file.write(f'{epoch},{valid_acc}\n')
-                pbar.set_postfix({"accuracy": correct / num_valid})
+                valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
+
+            main_pbar.refresh()
 
             # check for improvement
             if valid_acc > best_valid_acc:
                 is_best = True
+                best_valid_acc = valid_acc
+                best_epoch = epoch
+                counter = 0
             else:
                 is_best = False
-
-            msg = "train loss: {:.3f} - valid acc: {:.3f}"
-            if is_best:
-                msg += " [*]"
-                counter = 0
-            print(msg.format(train_losses.avg, valid_acc))
+                counter += 1
 
             # checkpoint the model
-            if not is_best:
-                counter += 1
             if counter > self.config.train_patience:
                 print("[!] No improvement in a while, stopping training.")
                 return
-            best_valid_acc = max(valid_acc, best_valid_acc)
-            self.save_checkpoint(
-                {
-                    'epoch': epoch + 1,
-                    'model_state': model.state_dict(),
-                    'optim_state': optimizer.state_dict(),
-                    'best_valid_acc': best_valid_acc,
-                }, is_best
-            )
+
+            if is_best or epoch % 5 == 0 or epoch == self.config.epochs:
+                self.save_checkpoint(
+                    {
+                        'epoch': epoch + 1,
+                        'model_state': model.state_dict(),
+                        'optim_state': optimizer.state_dict(),
+                        'best_valid_acc': best_valid_acc,
+                    }, is_best
+                )
+
+            main_pbar.set_postfix_str(
+                f"train loss: {train_losses.avg:.3f} - valid acc: {valid_acc:.3f} - best: {best_epoch}")
+
         # release resources
         train_file.close()
         valid_file.close()
@@ -161,30 +166,30 @@ class Trainer(object):
             model.cuda()
 
         test_loader = get_test_loader(self.config.data_dir, self.config.way, self.config.test_trials,
-                                      self.config.random_seed)
+                                      self.config.seed, self.config.num_workers, self.config.pin_memory)
         num_test = test_loader.dataset.trials
         correct = 0
 
         pbar = tqdm(enumerate(test_loader), total=num_test, desc="Test")
-        for i, (x1, x2) in pbar:
+        for i, (x1, x2, y) in pbar:
             if self.config.use_gpu:
                 x1, x2 = x1.cuda(), x2.cuda()
 
             # compute log probabilities
             out = model(x1, x2)
-            log_probas = sigmoid(out)
+            log_probas = torch.sigmoid(out)
 
             # get index of max log prob
             pred = log_probas.data.max(0)[1][0]
             if pred == 0:
                 correct += 1
-            pbar.set_postfix({"accuracy": {correct / num_test}})
+            pbar.set_postfix_str(f"accuracy: {correct} / {num_test}")
 
         test_acc = (100. * correct) / num_test
         print(f"Test Acc: {correct}/{num_test} ({test_acc:.2f}%)")
 
     def save_checkpoint(self, state, is_best):
-        filename = 'model_ckpt.tar'
+        filename = f'model_ckpt_{state["epoch"]}.tar'
         ckpt_path = os.path.join(self.ckpt_dir, filename)
         torch.save(state, ckpt_path)
 
@@ -198,14 +203,17 @@ class Trainer(object):
         print("[*] Loading model from {}".format(self.ckpt_dir))
 
         filename = 'model_ckpt.tar'
+        ckpt_path = sorted(glob(self.ckpt_dir + '/model_ckpt_*'))[0]
+
         if best:
             filename = 'best_model_ckpt.tar'
-        ckpt_path = os.path.join(self.ckpt_dir, filename)
+            ckpt_path = os.path.join(self.ckpt_dir, filename)
+
         ckpt = torch.load(ckpt_path)
 
         if best:
             print(
-                f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']}with best valid acc of {ckpt['best_valid_acc']:.3f}")
+                f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']} with best valid acc of {ckpt['best_valid_acc']:.3f}")
         else:
             print(f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']}")
 
