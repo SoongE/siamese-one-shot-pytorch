@@ -55,9 +55,13 @@ def save_config(config):
 def download_omniglot_data():
     BASEDIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 
+    # make directory
     if not os.path.exists(BASEDIR):
         os.mkdir(BASEDIR)
+    if not os.path.exists(os.path.join(BASEDIR, 'unzip')):
+        os.mkdir(os.path.join(BASEDIR, 'unzip'))
 
+    # download zip file
     if not os.path.exists(BASEDIR + '/raw/images_background.zip'):
         print("download background image")
         wget.download("https://raw.githubusercontent.com/brendenlake/omniglot/master/python/images_background.zip",
@@ -67,21 +71,21 @@ def download_omniglot_data():
         wget.download("https://raw.githubusercontent.com/brendenlake/omniglot/master/python/images_evaluation.zip",
                       BASEDIR + '/raw')
 
-    for d in glob(BASEDIR + '/raw/*.zip'):
-        zip_name = os.path.splitext(os.path.basename(d))[0]
-        print(f'{zip_name}is being unzipped...', end="")
-        with ZipFile(d, 'r') as zip_object:
-            zip_object.extractall(BASEDIR + '/unzip/')
-        print("success")
+    # if there are no unzipped files
+    if not any([True for _ in os.scandir(os.path.join(BASEDIR, "unzip"))]):
+        # unzip files
+        for d in glob(BASEDIR + '/raw/*.zip'):
+            zip_name = os.path.splitext(os.path.basename(d))[0]
+            print(f'{zip_name}is being unzipped...', end="")
+            with ZipFile(d, 'r') as zip_object:
+                zip_object.extractall(BASEDIR + '/unzip/')
+            print("success")
 
-    try:
-        os.rename(BASEDIR + '/unzip/images_background', BASEDIR + '/unzip/background')
-        os.rename(BASEDIR + '/unzip/images_evaluation', BASEDIR + '/unzip/evaluation')
-    except FileNotFoundError as e:
-        print(e)
+        # change folder name
+        try:
+            os.rename(BASEDIR + '/unzip/images_background', BASEDIR + '/unzip/background')
+            os.rename(BASEDIR + '/unzip/images_evaluation', BASEDIR + '/unzip/evaluation')
+        except FileNotFoundError as e:
+            print(e)
 
     print("DONE.")
-
-
-if __name__ == '__main__':
-    download_data()
