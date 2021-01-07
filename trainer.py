@@ -205,14 +205,8 @@ class Trainer(object):
 
         if best:
             print(
-                "[*] Loaded {} checkpoint @ epoch {} "
-                "with best valid acc of {:.3f}".format(
-                    filename, ckpt['epoch'], ckpt['best_valid_acc'])
-            )
+                f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']}with best valid acc of {ckpt['best_valid_acc']:.3f}")
         else:
-            print(
-                "[*] Loaded {} checkpoint @ epoch {}".format(
-                    filename, ckpt['epoch'])
-            )
+            print(f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']}")
 
         return ckpt['epoch'], ckpt['best_valid_acc'], ckpt['model_state'], ckpt['optim_state']
