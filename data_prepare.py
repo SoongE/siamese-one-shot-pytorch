@@ -24,6 +24,9 @@ def prepare_data():
     processed_dir = "data/processed"
     random.seed(5)
 
+    if any([True for _ in os.scandir(processed_dir)]):
+        return
+
     if os.path.exists(processed_dir) is None:
         os.makedirs(processed_dir)
 
