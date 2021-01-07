@@ -87,5 +87,3 @@ def download_omniglot_data():
             os.rename(BASEDIR + '/unzip/images_evaluation', BASEDIR + '/unzip/evaluation')
         except FileNotFoundError as e:
             print(e)
-
-    print("DONE.")
