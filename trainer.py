@@ -155,7 +155,7 @@ class Trainer(object):
 
         # Load best model
         model = SiameseNet()
-        start_epoch, best_valid_acc, model_state, _ = self.load_checkpoint(best=False)
+        start_epoch, best_valid_acc, model_state, _ = self.load_checkpoint(best=self.config.best)
         model.load_state_dict(model_state)
         if self.config.use_gpu:
             model.cuda()
@@ -194,7 +194,7 @@ class Trainer(object):
                 ckpt_path, os.path.join(self.ckpt_dir, filename)
             )
 
-    def load_checkpoint(self, best=False):
+    def load_checkpoint(self, best):
         print("[*] Loading model from {}".format(self.ckpt_dir))
 
         filename = 'model_ckpt.tar'
