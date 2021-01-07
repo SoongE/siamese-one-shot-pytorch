@@ -92,7 +92,7 @@ class SiameseNet(nn.Module):
         diff = torch.abs(h1 - h2)
 
         # score the similarity between the 2 encodings
-        scores = self.fc2(diff)
+        scores = self.out(diff)
 
         # return scores (without sigmoid) and use bce_with_logit
         # for increased numerical stability
