@@ -65,9 +65,9 @@ class Trainer(object):
 
         best_epoch = 0
         counter = 0
-        num_train = len(train_loader.dataset)
-        num_valid = valid_loader.dataset.trials
-        print(f"[*] Train on {num_train} sample pairs, validate on {num_valid} trials")
+        num_train = len(train_loader)
+        num_valid = len(valid_loader)
+        print(f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {len(valid_loader.dataset)} trials")
 
         # Train & Validation
         main_pbar = tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs, ncols=100, desc="Process")
