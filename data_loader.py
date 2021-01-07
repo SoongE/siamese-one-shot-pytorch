@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets as dset, transforms
 
 
-def get_train_validation_loader(data_dir, batch_size, num_train, augment, way, trials, shuffle=False, seed=0,
-                                num_workers=4, pin_memory=False):
+def get_train_validation_loader(data_dir, batch_size, num_train, augment, way, trials, shuffle, seed, num_workers,
+                                pin_memory):
     train_dir = os.path.join(data_dir, 'train')
     val_dir = os.path.join(data_dir, 'val')
 
@@ -27,7 +27,7 @@ def get_train_validation_loader(data_dir, batch_size, num_train, augment, way, t
     return train_loader, val_loader
 
 
-def get_test_loader(data_dir, way, trials, seed=0, num_workers=4, pin_memory=False):
+def get_test_loader(data_dir, way, trials, seed, num_workers, pin_memory):
     test_dir = os.path.join(data_dir, 'test')
     test_dataset = dset.ImageFolder(test_dir)
     test_dataset = OmniglotTest(test_dataset, trials=trials, way=way, seed=seed)
@@ -60,10 +60,10 @@ class OmniglotTrain(Dataset):
         # get image from different class
         else:
             label = 0.0
-            image1 = random.choice(self.dataset)
-            image2 = random.choice(self.dataset)
+            image1 = random.choice(self.dataset.imgs)
+            image2 = random.choice(self.dataset.imgs)
             while image1 == image2:
-                image2 = random.choice(self.dataset)
+                image2 = random.choice(self.dataset.imgs)
 
         # apply transformation
         if self.augment:
@@ -110,10 +110,10 @@ class OmniglotTest:
         # get image pair from different class
         else:
             label = 0
-            image1 = random.choice(self.dataset)
-            image2 = random.choice(self.dataset)
+            image1 = random.choice(self.dataset.imgs)
+            image2 = random.choice(self.dataset.imgs)
             while image1 == image2:
-                image2 = random.choice(self.dataset)
+                image2 = random.choice(self.dataset.imgs)
 
         trans = transforms.ToTensor()
 
