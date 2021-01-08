@@ -64,7 +64,7 @@ def load_config(config):
 
 # download omniglot dataset
 def download_omniglot_data():
-    BASEDIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
+    BASEDIR = os.path.dirname(os.path.realpath(__file__)) + '../data'
 
     # make directory
     if not os.path.exists(BASEDIR):

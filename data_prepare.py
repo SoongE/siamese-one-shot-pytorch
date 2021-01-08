@@ -19,9 +19,9 @@ def copy_image_to_processed_dir(alpha_list, img_dir, desc):
 
 
 def prepare_data():
-    background_dir = "data/unzip/background"
-    evaluation_dir = "data/unzip/evaluation"
-    processed_dir = "data/processed"
+    background_dir = "../data/unzip/background"
+    evaluation_dir = "../data/unzip/evaluation"
+    processed_dir = "../data/processed"
     random.seed(5)
 
     if any([True for _ in os.scandir(processed_dir)]):
