@@ -75,6 +75,7 @@ class Trainer(object):
                          total=self.config.epochs, ncols=100, desc="Process")
         for epoch in main_pbar:
             train_losses = AverageMeter()
+            valid_losses = AverageMeter()
 
             # TRAIN
             model.train()
@@ -86,14 +87,17 @@ class Trainer(object):
                 out = model(x1, x2)
                 loss = criterion(out, y.unsqueeze(1))
 
+                # print('*' * 20)
+                # print(out.data, y.data)
+                # print('*' * 20)
+
                 # compute gradients and update
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
                 # store batch statistics
-                batch_size = x1.shape[0]
-                train_losses.update(loss.item(), batch_size)
+                train_losses.update(loss.item(), x1.shape[0])
 
                 # log loss
                 train_file.write(f'{(epoch * len(train_loader)) + i},{train_losses.val}\n')
@@ -101,31 +105,27 @@ class Trainer(object):
 
             # VALIDATION
             model.eval()
-            correct = 0
             valid_acc = 0
             valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100, position=1,
                               leave=False)
             with torch.no_grad():
                 for i, (x1, x2, y) in valid_pbar:
                     if self.config.use_gpu:
-                        x1, x2 = x1.to(self.device), x2.to(self.device)
+                        x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
 
                     # compute log probabilities
                     out = model(x1, x2)
-                    log_probas = torch.sigmoid(out)
+                    loss = criterion(out, y.unsqueeze(1))
 
-                    # get index of max log prob
-                    pred = log_probas.data.max(0)[1][0]
-                    if pred == 0:
-                        correct += 1
+                    y_pred = torch.round(torch.sigmoid(out))
+                    correct_sum = (y_pred == y.unsqueeze(1)).sum().float()
 
-                    print('*' * 40)
-                    print(pred, y, correct)
-                    print('*' * 40)
+                    # store batch statistics
+                    valid_losses.update(loss.item(), x1.shape[0])
 
                     # compute acc and log
-                    valid_acc = correct / num_valid
-                    valid_file.write(f'{epoch},{valid_acc}\n')
+                    valid_acc = correct_sum / num_valid
+                    valid_file.write(f'{epoch},{valid_losses.val},{valid_acc}\n')
                     valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
 
             # check for improvement
@@ -154,9 +154,10 @@ class Trainer(object):
                     }, is_best
                 )
 
-            main_pbar.set_postfix_str(f"best acc: {best_valid_acc} best epoch: {best_epoch} ")
+            main_pbar.set_postfix_str(f"best acc: {best_valid_acc:.3f} best epoch: {best_epoch} ")
 
-            tqdm.write(f"[{epoch}] train loss: {train_losses.avg:.3f} - valid loss: {log} - valid acc: {valid_acc}")
+            tqdm.write(
+                f"[{epoch}] train loss: {train_losses.avg:.3f} - valid loss: {valid_losses.avg:.3f} - valid acc: {valid_acc} {'[BEST]' if is_best else ''}")
 
         # release resources
         train_file.close()
@@ -174,25 +175,23 @@ class Trainer(object):
         test_loader = get_test_loader(self.config.data_dir, self.config.way, self.config.test_trials,
                                       self.config.seed, self.config.num_workers, self.config.pin_memory)
         num_test = test_loader.dataset.trials
-        correct = 0
+
+        print(f"[*] Test on {num_test} pairs.")
 
         pbar = tqdm(enumerate(test_loader), total=num_test, desc="Test")
         for i, (x1, x2, y) in pbar:
             if self.config.use_gpu:
-                x1, x2 = x1.cuda(), x2.cuda()
+                x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
 
             # compute log probabilities
             out = model(x1, x2)
-            log_probas = torch.sigmoid(out)
+            y_pred = torch.round(torch.sigmoid(out))
+            correct_sum = (y_pred == y.unsqueeze(1)).sum().float()
 
-            # get index of max log prob
-            pred = log_probas.data.max(0)[1][0]
-            if pred == 0:
-                correct += 1
-            pbar.set_postfix_str(f"accuracy: {correct} / {num_test}")
+            pbar.set_postfix_str(f"accuracy: {correct_sum / num_test}")
 
-        test_acc = (100. * correct) / num_test
-        print(f"Test Acc: {correct}/{num_test} ({test_acc:.2f}%)")
+        test_acc = (100. * correct_sum) / num_test
+        print(f"Test Acc: {correct_sum}/{num_test} ({test_acc:.2f}%)")
 
     def save_checkpoint(self, state, is_best):
 
