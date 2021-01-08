@@ -52,10 +52,11 @@ class Trainer(object):
 
         # Load check point
         if self.config.resume:
-            start_epoch, best_valid_acc, model_state, optim_state = self.load_checkpoint(best=False)
+            start_epoch, best_epoch, best_valid_acc, model_state, optim_state = self.load_checkpoint(best=False)
             model.load_state_dict(model_state)
             optimizer.load_state_dict(optim_state)
         else:
+            best_epoch = 0
             start_epoch = 0
             best_valid_acc = 0
 
@@ -63,7 +64,6 @@ class Trainer(object):
         train_file = open(os.path.join(self.logs_dir, 'train.csv'), 'w')
         valid_file = open(os.path.join(self.logs_dir, 'valid.csv'), 'w')
 
-        best_epoch = 0
         counter = 0
         num_train = len(train_loader)
         num_valid = len(valid_loader)
@@ -119,6 +119,10 @@ class Trainer(object):
                     if pred == 0:
                         correct += 1
 
+                    print('*' * 40)
+                    print(pred, y, correct)
+                    print('*' * 40)
+
                     # compute acc and log
                     valid_acc = correct / num_valid
                     valid_file.write(f'{epoch},{valid_acc}\n')
@@ -146,10 +150,13 @@ class Trainer(object):
                         'model_state': model.state_dict(),
                         'optim_state': optimizer.state_dict(),
                         'best_valid_acc': best_valid_acc,
+                        'best_epoch': best_epoch,
                     }, is_best
                 )
 
-            tqdm.write(f"train loss: {train_losses.avg:.3f} - best acc: {best_valid_acc:.3f} -best epoch: {best_epoch}")
+            main_pbar.set_postfix_str(f"best acc: {best_valid_acc} best epoch: {best_epoch} ")
+
+            tqdm.write(f"[{epoch}] train loss: {train_losses.avg:.3f} - valid loss: {log} - valid acc: {valid_acc}")
 
         # release resources
         train_file.close()
@@ -159,7 +166,7 @@ class Trainer(object):
 
         # Load best model
         model = SiameseNet()
-        start_epoch, best_valid_acc, model_state, _ = self.load_checkpoint(best=self.config.best)
+        _, _, _, model_state, _ = self.load_checkpoint(best=self.config.best)
         model.load_state_dict(model_state)
         if self.config.use_gpu:
             model.cuda()
@@ -214,4 +221,4 @@ class Trainer(object):
         else:
             print(f"Loaded {os.path.basename(model_path)} checkpoint @ epoch {ckpt['epoch']}")
 
-        return ckpt['epoch'], ckpt['best_valid_acc'], ckpt['model_state'], ckpt['optim_state']
+        return ckpt['epoch'], ckpt['best_epoch'], ckpt['best_valid_acc'], ckpt['model_state'], ckpt['optim_state']
