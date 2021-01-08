@@ -74,5 +74,4 @@ def download_data():
 
 
 if __name__ == '__main__':
-    # Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
-    run()
+    Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
