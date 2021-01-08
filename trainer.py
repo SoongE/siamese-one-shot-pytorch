@@ -45,7 +45,7 @@ class Trainer(object):
 
         # Model, Optimizer, criterion
         model = SiameseNet()
-        optimizer = optim.Adam(model.parameters(), lr=3e-4, weight_decay=6e-5)
+        optimizer = optim.SGD(model.parameters(), lr=3e-4, weight_decay=6e-5)
         criterion = torch.nn.BCEWithLogitsLoss()
         if self.config.use_gpu:
             model.cuda()
@@ -87,10 +87,6 @@ class Trainer(object):
                 out = model(x1, x2)
                 loss = criterion(out, y.unsqueeze(1))
 
-                # print('*' * 20)
-                # print(out.data, y.data)
-                # print('*' * 20)
-
                 # compute gradients and update
                 optimizer.zero_grad()
                 loss.backward()
@@ -106,6 +102,7 @@ class Trainer(object):
             # VALIDATION
             model.eval()
             valid_acc = 0
+            correct_sum = 0
             valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100, position=1,
                               leave=False)
             with torch.no_grad():
@@ -118,7 +115,7 @@ class Trainer(object):
                     loss = criterion(out, y.unsqueeze(1))
 
                     y_pred = torch.round(torch.sigmoid(out))
-                    correct_sum = (y_pred == y.unsqueeze(1)).sum().float()
+                    correct_sum += (y_pred == y.unsqueeze(1)).sum().float()
 
                     # store batch statistics
                     valid_losses.update(loss.item(), x1.shape[0])
