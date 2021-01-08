@@ -30,7 +30,7 @@ class Trainer(object):
         self.config = config
 
         # path params
-        self.ckpt_dir = os.path.join(config.ckpt_dir, config.num_model)
+        self.model_dir = os.path.join(config.model_dir, config.num_model)
         self.logs_dir = os.path.join(config.logs_dir, config.num_model)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -71,13 +71,15 @@ class Trainer(object):
             f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {valid_loader.dataset.trials} trials")
 
         # Train & Validation
-        main_pbar = tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs, ncols=100, desc="Process")
+        main_pbar = tqdm(range(0, self.config.epochs), initial=start_epoch, position=0,
+                         total=self.config.epochs, ncols=100, desc="Process")
         for epoch in main_pbar:
             train_losses = AverageMeter()
 
             # TRAIN
             model.train()
-            train_pbar = tqdm(enumerate(train_loader), total=num_train, desc="Train", ncols=100)
+            train_pbar = tqdm(enumerate(train_loader), total=num_train, desc="Train", ncols=100, position=1,
+                              leave=False)
             for i, (x1, x2, y) in train_pbar:
                 if self.config.use_gpu:
                     x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
@@ -97,13 +99,12 @@ class Trainer(object):
                 train_file.write(f'{(epoch * len(train_loader)) + i},{train_losses.val}\n')
                 train_pbar.set_postfix_str(f"loss: {train_losses.val:0.3f}")
 
-            main_pbar.refresh()
-
             # VALIDATION
             model.eval()
             correct = 0
             valid_acc = 0
-            valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100)
+            valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100, position=1,
+                              leave=False)
             with torch.no_grad():
                 for i, (x1, x2, y) in valid_pbar:
                     if self.config.use_gpu:
@@ -122,8 +123,6 @@ class Trainer(object):
                     valid_acc = correct / num_valid
                     valid_file.write(f'{epoch},{valid_acc}\n')
                     valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
-
-            main_pbar.refresh()
 
             # check for improvement
             if valid_acc > best_valid_acc:
@@ -150,8 +149,7 @@ class Trainer(object):
                     }, is_best
                 )
 
-            main_pbar.set_postfix_str(
-                f"train loss: {train_losses.avg:.3f} - valid acc: {valid_acc:.3f} - best: {best_epoch}")
+            tqdm.write(f"train loss: {train_losses.avg:.3f} - best acc: {best_valid_acc:.3f} -best epoch: {best_epoch}")
 
         # release resources
         train_file.close()
@@ -192,29 +190,28 @@ class Trainer(object):
     def save_checkpoint(self, state, is_best):
 
         if is_best:
-            filename = 'best_model_ckpt.tar'
+            filename = 'best_model.tar'
         else:
             filename = f'model_ckpt_{state["epoch"]}.tar'
 
-        ckpt_path = os.path.join(self.ckpt_dir, filename)
-        torch.save(state, ckpt_path)
+        model_path = os.path.join(self.model_dir, filename)
+        torch.save(state, model_path)
 
     def load_checkpoint(self, best):
-        print("[*] Loading model from {}".format(self.ckpt_dir))
+        print(f"[*] Loading model Num.{self.config.num_model}...", end="")
 
-        filename = 'model_ckpt.tar'
-        ckpt_path = sorted(glob(self.ckpt_dir + '/model_ckpt_*'))[0]
+        model_path = sorted(glob(self.model_dir + '/model_ckpt_*'), key=len)[-1]
 
         if best:
-            filename = 'best_model_ckpt.tar'
-            ckpt_path = os.path.join(self.ckpt_dir, filename)
+            filename = 'best_model.tar'
+            model_path = os.path.join(self.model_dir, filename)
 
-        ckpt = torch.load(ckpt_path)
+        ckpt = torch.load(model_path)
 
         if best:
             print(
-                f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']} with best valid acc of {ckpt['best_valid_acc']:.3f}")
+                f"Loaded {filename} checkpoint @ epoch {ckpt['epoch']} with best valid acc of {ckpt['best_valid_acc']:.3f}")
         else:
-            print(f"[*] Loaded {filename} checkpoint @ epoch {ckpt['epoch']}")
+            print(f"Loaded {os.path.basename(model_path)} checkpoint @ epoch {ckpt['epoch']}")
 
         return ckpt['epoch'], ckpt['best_valid_acc'], ckpt['model_state'], ckpt['optim_state']
