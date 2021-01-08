@@ -32,6 +32,7 @@ class Trainer(object):
         # path params
         self.ckpt_dir = os.path.join(config.ckpt_dir, config.num_model)
         self.logs_dir = os.path.join(config.logs_dir, config.num_model)
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     def train(self):
         # Dataloader
@@ -67,7 +68,7 @@ class Trainer(object):
         num_train = len(train_loader)
         num_valid = len(valid_loader)
         print(
-            f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {len(valid_loader.dataset.trials)} trials")
+            f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {valid_loader.dataset.trials} trials")
 
         # Train & Validation
         main_pbar = tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs, ncols=100, desc="Process")
@@ -79,7 +80,7 @@ class Trainer(object):
             train_pbar = tqdm(enumerate(train_loader), total=num_train, desc="Train", ncols=100)
             for i, (x1, x2, y) in train_pbar:
                 if self.config.use_gpu:
-                    x1, x2, y = x1.cuda(), x2.cuda(), y.cuda()
+                    x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
                 out = model(x1, x2)
                 loss = criterion(out, y.unsqueeze(1))
 
@@ -103,24 +104,24 @@ class Trainer(object):
             correct = 0
             valid_acc = 0
             valid_pbar = tqdm(enumerate(valid_loader), total=num_valid, desc="Valid", ncols=100)
-            for i, (x1, x2, y) in valid_pbar:
-                if self.config.use_gpu:
-                    x1, x2 = x1.cuda(), x2.cuda()
+            with torch.no_grad():
+                for i, (x1, x2, y) in valid_pbar:
+                    if self.config.use_gpu:
+                        x1, x2 = x1.to(self.device), x2.to(self.device)
 
-                with torch.no_grad():
                     # compute log probabilities
                     out = model(x1, x2)
                     log_probas = torch.sigmoid(out)
 
-                # get index of max log prob
-                pred = log_probas.data.max(0)[1][0]
-                if pred == 0:
-                    correct += 1
+                    # get index of max log prob
+                    pred = log_probas.data.max(0)[1][0]
+                    if pred == 0:
+                        correct += 1
 
-                # compute acc and log
-                valid_acc = correct / num_valid
-                valid_file.write(f'{epoch},{valid_acc}\n')
-                valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
+                    # compute acc and log
+                    valid_acc = correct / num_valid
+                    valid_file.write(f'{epoch},{valid_acc}\n')
+                    valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
 
             main_pbar.refresh()
 
