@@ -68,7 +68,7 @@ misc_arg.add_argument('--model_dir', type=str, default='./result/models/',
                       help='Directory in which to save model checkpoints')
 misc_arg.add_argument('--logs_dir', type=str, default='./result/logs/',
                       help='Directory in which logs wil be stored')
-misc_arg.add_argument('--resume', type=str2bool, default=True,
+misc_arg.add_argument('--resume', type=str2bool, default=False,
                       help='Whether to resume training from checkpoint')
 
 
