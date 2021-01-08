@@ -18,15 +18,15 @@ parser = argparse.ArgumentParser(description='Siamese Network')
 
 # data params
 data_arg = parser.add_argument_group('Data Params')
-data_arg.add_argument('--valid_trials', type=int, default=300,
+data_arg.add_argument('--valid_trials', type=int, default=320,
                       help='# of validation 1-shot trials')
-data_arg.add_argument('--test_trials', type=int, default=300,
+data_arg.add_argument('--test_trials', type=int, default=400,
                       help='# of test 1-shot trials')
 data_arg.add_argument('--way', type=int, default=20,
                       help='Ways in the 1-shot trials')
-data_arg.add_argument('--num_train', type=int, default=50000,
+data_arg.add_argument('--num_train', type=int, default=90000,
                       help='# of images in train dataset')
-data_arg.add_argument('--batch_size', type=int, default=128,
+data_arg.add_argument('--batch_size', type=int, default=64,
                       help='# of images in each batch of data')
 data_arg.add_argument('--num_workers', type=int, default=4,
                       help='# of subprocesses to use for data loading')
