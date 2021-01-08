@@ -1,5 +1,4 @@
 import os
-import shutil
 from glob import glob
 
 import torch
@@ -67,7 +66,8 @@ class Trainer(object):
         counter = 0
         num_train = len(train_loader)
         num_valid = len(valid_loader)
-        print(f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {len(valid_loader.dataset)} trials")
+        print(
+            f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {len(valid_loader.dataset.trials)} trials")
 
         # Train & Validation
         main_pbar = tqdm(range(start_epoch, self.config.epochs), total=self.config.epochs, ncols=100, desc="Process")
@@ -197,7 +197,6 @@ class Trainer(object):
 
         ckpt_path = os.path.join(self.ckpt_dir, filename)
         torch.save(state, ckpt_path)
-
 
     def load_checkpoint(self, best):
         print("[*] Loading model from {}".format(self.ckpt_dir))
