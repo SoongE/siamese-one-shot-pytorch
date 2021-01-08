@@ -29,6 +29,8 @@ def train(config=None, trainer=None):
         except ValueError:
             print("[!] config data already exist. Either change the model number, or delete the json file and rerun.")
             return
+    else:
+        save_config(config)
 
     # train model
     print_status("Train Start")
