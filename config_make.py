@@ -64,16 +64,16 @@ misc_arg.add_argument('--data_dir', type=str, default='./data/processed/',
                       help='Directory in which data is stored')
 misc_arg.add_argument('--plot_dir', type=str, default='./result/plots/',
                       help='Directory in which plots are stored')
-misc_arg.add_argument('--ckpt_dir', type=str, default='./result/ckpt/',
+misc_arg.add_argument('--model_dir', type=str, default='./result/models/',
                       help='Directory in which to save model checkpoints')
 misc_arg.add_argument('--logs_dir', type=str, default='./result/logs/',
                       help='Directory in which logs wil be stored')
-misc_arg.add_argument('--resume', type=str2bool, default=False,
+misc_arg.add_argument('--resume', type=str2bool, default=True,
                       help='Whether to resume training from checkpoint')
 
 
 def get_config():
-    config, unknown = parser.parse_known_args()
+    config, _ = parser.parse_known_args()
 
     assert config.num_workers > 0, f"number of worker must be >= 1, you are {config.num_workers}"
     assert int(config.num_model) > 0, f"number of model must be >= 1, you are {config.num_model}"
@@ -90,6 +90,9 @@ def get_config():
         torch.cuda.manual_seed(config.seed)
         config.num_workers: 1
         config.pin_memory: True
+
+    if config.resume:
+        config.best = False
 
     return config
 
