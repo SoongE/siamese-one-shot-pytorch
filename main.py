@@ -1,6 +1,6 @@
 from fire import Fire
 
-from config_make import get_config
+from config_maker import get_config
 from trainer import Trainer
 from utils import *
 from data_prepare import *
