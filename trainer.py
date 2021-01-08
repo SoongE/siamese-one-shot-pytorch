@@ -189,15 +189,15 @@ class Trainer(object):
         print(f"Test Acc: {correct}/{num_test} ({test_acc:.2f}%)")
 
     def save_checkpoint(self, state, is_best):
-        filename = f'model_ckpt_{state["epoch"]}.tar'
-        ckpt_path = os.path.join(self.ckpt_dir, filename)
-        torch.save(state, ckpt_path)
 
         if is_best:
             filename = 'best_model_ckpt.tar'
-            shutil.copyfile(
-                ckpt_path, os.path.join(self.ckpt_dir, filename)
-            )
+        else:
+            filename = f'model_ckpt_{state["epoch"]}.tar'
+
+        ckpt_path = os.path.join(self.ckpt_dir, filename)
+        torch.save(state, ckpt_path)
+
 
     def load_checkpoint(self, best):
         print("[*] Loading model from {}".format(self.ckpt_dir))
