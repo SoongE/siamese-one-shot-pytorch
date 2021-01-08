@@ -27,7 +27,7 @@ class AverageMeter(object):
 
 
 def prepare_dirs(config):
-    for path in [config.ckpt_dir, config.logs_dir, config.plot_dir]:
+    for path in [config.model_dir, config.logs_dir, config.plot_dir]:
         path = os.path.join(path, config.num_model)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -38,7 +38,7 @@ def prepare_dirs(config):
 
 
 def save_config(config):
-    model_dir = os.path.join(config.ckpt_dir, config.num_model)
+    model_dir = os.path.join(config.model_dir, config.num_model)
     param_path = os.path.join(model_dir, 'params.json')
 
     if not os.path.isfile(param_path):
@@ -49,6 +49,17 @@ def save_config(config):
             json.dump(all_params, fp, indent=4, sort_keys=True)
     else:
         raise ValueError
+
+
+def load_config(config):
+    model_dir = os.path.join(config.model_dir, config.num_model)
+    filename = 'params.json'
+    param_path = os.path.join(model_dir, filename)
+    params = json.load(open(param_path))
+
+    config.__dict__.update(params)
+
+    return config
 
 
 # download omniglot dataset
