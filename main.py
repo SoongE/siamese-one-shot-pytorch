@@ -13,7 +13,8 @@ def print_status(string):
 
 # only train and validation
 def train(config=None, trainer=None):
-    if config or trainer is None:
+    if config is None or trainer is None:
+        print(config, trainer)
         config = get_config()
         trainer = Trainer(config)
 
@@ -24,7 +25,7 @@ def train(config=None, trainer=None):
     if config.resume:
         try:
             print(f"load saved config data of model number {config.num_model}")
-            save_config(config)
+            load_config(config)
         except ValueError:
             print("[!] config data already exist. Either change the model number, or delete the json file and rerun.")
             return
@@ -36,7 +37,7 @@ def train(config=None, trainer=None):
 
 # only test
 def test(config=None, trainer=None):
-    if config or trainer is None:
+    if config is None or trainer is None:
         config = get_config()
         trainer = Trainer(config)
 
@@ -72,9 +73,6 @@ def download_data():
     print("DONE")
 
 
-def testing():
-    print("HELLO")
-
-
 if __name__ == '__main__':
-    Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
+    # Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
+    run()
