@@ -79,6 +79,14 @@ def get_config():
     assert int(config.num_model) > 0, f"number of model must be >= 1, you are {config.num_model}"
 
     if config.use_gpu and torch.cuda.is_available():
+        print(f"[*] use GPU ", end="")
+        device_count = torch.cuda.device_count()
+        for id in range(device_count):
+            if id == device_count - 1:
+                print(torch.cuda.get_device_name(id))
+            else:
+                print(f'{torch.cuda.get_device_name(id)}', end="")
+
         torch.cuda.manual_seed(config.seed)
         config.num_workers: 1
         config.pin_memory: True
