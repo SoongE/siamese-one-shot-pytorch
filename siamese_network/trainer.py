@@ -45,7 +45,7 @@ class Trainer(object):
 
         # Model, Optimizer, criterion
         model = SiameseNet()
-        optimizer = optim.SGD(model.parameters(), lr=3e-4, weight_decay=6e-5)
+        optimizer = optim.Adam(model.parameters(), lr=3e-4, weight_decay=6e-5)
         criterion = torch.nn.BCEWithLogitsLoss()
         if self.config.use_gpu:
             model.cuda()
@@ -117,11 +117,16 @@ class Trainer(object):
                     y_pred = torch.round(torch.sigmoid(out))
                     correct_sum += (y_pred == y.unsqueeze(1)).sum().float()
 
+                    print(out)
+                    print(y_pred)
+                    print(correct_sum)
+                    print(num_valid * x1.shape[0])
+
                     # store batch statistics
                     valid_losses.update(loss.item(), x1.shape[0])
 
                     # compute acc and log
-                    valid_acc = correct_sum / num_valid
+                    valid_acc = correct_sum / (num_valid * x1.shape[0])
                     valid_file.write(f'{epoch},{valid_losses.val},{valid_acc}\n')
                     valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
 

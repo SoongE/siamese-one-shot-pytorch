@@ -48,6 +48,7 @@ def save_config(config):
         with open(param_path, 'w') as fp:
             json.dump(all_params, fp, indent=4, sort_keys=True)
     else:
+        print(f"[!] Config file already exist.")
         raise ValueError
 
 

@@ -98,7 +98,8 @@ class OmniglotTest:
 
     def __getitem__(self, index):
         # get image pair from same class
-        if index % 2 == 0:
+        # if index % 2 == 0:
+        if index % self.way == 0:
             label = 1
             idx = random.randint(0, len(self.dataset.classes) - 1)
             image_list = [x for x in self.dataset.imgs if x[1] == idx]
