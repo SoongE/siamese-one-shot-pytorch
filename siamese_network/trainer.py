@@ -207,7 +207,7 @@ class Trainer(object):
     def load_checkpoint(self, best):
         print(f"[*] Loading model Num.{self.config.num_model}...", end="")
 
-        model_path = sorted(glob(self.config.logs_dir + 'models//model_ckpt_*'), key=len)[-1]
+        model_path = sorted(glob(self.config.logs_dir + './models/model_ckpt_*'), key=len)[-1]
 
         if best:
             filename = './models/best_model.tar'
