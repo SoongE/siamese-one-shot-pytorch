@@ -3,6 +3,7 @@ from glob import glob
 
 import torch
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from data_loader import get_train_validation_loader, get_test_loader
@@ -28,10 +29,6 @@ class Trainer(object):
         - config: object containing command line arguments.
         """
         self.config = config
-
-        # path params
-        self.model_dir = os.path.join(config.model_dir, config.num_model)
-        self.logs_dir = os.path.join(config.logs_dir, config.num_model)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     def train(self):
@@ -60,9 +57,8 @@ class Trainer(object):
             start_epoch = 0
             best_valid_acc = 0
 
-        # create train and validation log files
-        train_file = open(os.path.join(self.logs_dir, 'train.csv'), 'w')
-        valid_file = open(os.path.join(self.logs_dir, 'valid.csv'), 'w')
+        # create tensorboard summary
+        writer = SummaryWriter(os.path.join(self.config.logs_dir, 'logs'), filename_suffix=self.config.num_model)
 
         counter = 0
         num_train = len(train_loader)
@@ -96,7 +92,7 @@ class Trainer(object):
                 train_losses.update(loss.item(), x1.shape[0])
 
                 # log loss
-                train_file.write(f'{(epoch * len(train_loader)) + i},{train_losses.val}\n')
+                writer.add_scalar("Loss/Train", train_losses.val, epoch * len(train_loader) + i)
                 train_pbar.set_postfix_str(f"loss: {train_losses.val:0.3f}")
 
             # VALIDATION
@@ -115,19 +111,17 @@ class Trainer(object):
                     loss = criterion(out, y.unsqueeze(1))
 
                     y_pred = torch.round(torch.sigmoid(out))
-                    correct_sum += (y_pred == y.unsqueeze(1)).sum().float()
-
-                    print(out)
-                    print(y_pred)
-                    print(correct_sum)
-                    print(num_valid * x1.shape[0])
+                    y_pred = torch.argmax(y_pred)
+                    if y_pred == 0:
+                        correct_sum += 1
 
                     # store batch statistics
                     valid_losses.update(loss.item(), x1.shape[0])
 
                     # compute acc and log
-                    valid_acc = correct_sum / (num_valid * x1.shape[0])
-                    valid_file.write(f'{epoch},{valid_losses.val},{valid_acc}\n')
+                    valid_acc = correct_sum / num_valid
+                    writer.add_scalar("Loss/Valid", valid_losses.val, epoch * len(valid_loader) + i)
+                    writer.add_scalar("Acc/Valid", valid_acc, epoch * len(valid_loader) + i)
                     valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
 
             # check for improvement
@@ -161,9 +155,8 @@ class Trainer(object):
             tqdm.write(
                 f"[{epoch}] train loss: {train_losses.avg:.3f} - valid loss: {valid_losses.avg:.3f} - valid acc: {valid_acc:.3f} {'[BEST]' if is_best else ''}")
 
-        # release resources
-        train_file.close()
-        valid_file.close()
+            # release resources
+        writer.close()
 
     def test(self):
 
@@ -176,8 +169,9 @@ class Trainer(object):
 
         test_loader = get_test_loader(self.config.data_dir, self.config.way, self.config.test_trials,
                                       self.config.seed, self.config.num_workers, self.config.pin_memory)
-        num_test = test_loader.dataset.trials
 
+        correct_sum = 0
+        num_test = test_loader.dataset.trials
         print(f"[*] Test on {num_test} pairs.")
 
         pbar = tqdm(enumerate(test_loader), total=num_test, desc="Test")
@@ -187,8 +181,11 @@ class Trainer(object):
 
             # compute log probabilities
             out = model(x1, x2)
+
             y_pred = torch.round(torch.sigmoid(out))
-            correct_sum = (y_pred == y.unsqueeze(1)).sum().float()
+            y_pred = torch.argmax(y_pred)
+            if y_pred == 0:
+                correct_sum += 1
 
             pbar.set_postfix_str(f"accuracy: {correct_sum / num_test}")
 
@@ -198,21 +195,21 @@ class Trainer(object):
     def save_checkpoint(self, state, is_best):
 
         if is_best:
-            filename = 'best_model.tar'
+            filename = './models/best_model.tar'
         else:
-            filename = f'model_ckpt_{state["epoch"]}.tar'
+            filename = f'./models/model_ckpt_{state["epoch"]}.tar'
 
-        model_path = os.path.join(self.model_dir, filename)
+        model_path = os.path.join(self.config.logs_dir, filename)
         torch.save(state, model_path)
 
     def load_checkpoint(self, best):
         print(f"[*] Loading model Num.{self.config.num_model}...", end="")
 
-        model_path = sorted(glob(self.model_dir + '/model_ckpt_*'), key=len)[-1]
+        model_path = sorted(glob(self.config.logs_dir + 'models//model_ckpt_*'), key=len)[-1]
 
         if best:
-            filename = 'best_model.tar'
-            model_path = os.path.join(self.model_dir, filename)
+            filename = './models/best_model.tar'
+            model_path = os.path.join(self.config.logs_dir, filename)
 
         ckpt = torch.load(model_path)
 
