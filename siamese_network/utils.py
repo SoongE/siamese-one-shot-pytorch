@@ -27,18 +27,19 @@ class AverageMeter(object):
 
 
 def prepare_dirs(config):
-    path = config.logs_dir
-    if not os.path.exists(path):
-        os.makedirs(os.path.join(path, 'logs'))
-        os.makedirs(os.path.join(path, 'models'))
-    if config.flush:
-        shutil.rmtree(path)
+    for path in [config.model_dir, config.logs_dir, config.plot_dir]:
+        path = os.path.join(path, config.num_model)
         if not os.path.exists(path):
             os.makedirs(path)
+        if config.flush:
+            shutil.rmtree(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
 
 
 def save_config(config):
-    param_path = os.path.join(config.logs_dir, 'params.json')
+    model_dir = os.path.join(config.model_dir, config.num_model)
+    param_path = os.path.join(model_dir, 'params.json')
 
     if not os.path.isfile(param_path):
         print(f"Save params in {param_path}")
@@ -52,7 +53,9 @@ def save_config(config):
 
 
 def load_config(config):
-    param_path = os.path.join(config.logs_dir, 'params.json')
+    model_dir = os.path.join(config.model_dir, config.num_model)
+    filename = 'params.json'
+    param_path = os.path.join(model_dir, filename)
     params = json.load(open(param_path))
 
     config.__dict__.update(params)
