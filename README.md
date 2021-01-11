@@ -12,7 +12,11 @@ There are 4 way to verify the `Omniglot Dataset`. 3 Few shot Learning, 1 One Sho
 
 A implementation of the paper : [Siamese Neural Networks for One-shot Image Recognition](https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf) using pytorch. In the model, somethings, such as learning rates or regression, may differ from the original paper.
 
-You can run one shot learning step by step.
+You can run one shot learning step by step. Also, I posted the details of the code in ***Korean*** on my blog.
+
+한글로 논문과 코드에 대해 작성한 글이 있으니 관심있으신 분은 확인해보세요!
+
+
 
 ### 🚀How to run
 
@@ -54,7 +58,19 @@ All parameters are present in `config_maker`. If you want to adjust the paramete
 
 
 
+### Result
+
+Train logs, saved model and configuration data were in `./result/[model_number]`.  Logs are made by `tensorboard`. So if you want to see more detail about train metrics, write commend on `./siamese_network/result/[model_number]`  like this.
+
+```
+tensorboard --logdir=logs
+```
+
+
+
 ### 📌Reference
+
+siamese network
 
 * [Siamese Neural Networks for One-shot Image Recognition](https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf)
 
