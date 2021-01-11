@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import torch
 
@@ -62,11 +63,7 @@ misc_arg.add_argument('--seed', type=int, default=1,
                       help='Seed to ensure reproducibility')
 misc_arg.add_argument('--data_dir', type=str, default='../data/processed/',
                       help='Directory in which data is stored')
-misc_arg.add_argument('--plot_dir', type=str, default='./result/plots/',
-                      help='Directory in which plots are stored')
-misc_arg.add_argument('--model_dir', type=str, default='./result/models/',
-                      help='Directory in which to save model checkpoints')
-misc_arg.add_argument('--logs_dir', type=str, default='./result/logs/',
+misc_arg.add_argument('--logs_dir', type=str, default='./result/',
                       help='Directory in which logs wil be stored')
 misc_arg.add_argument('--resume', type=str2bool, default=False,
                       help='Whether to resume training from checkpoint')
@@ -93,6 +90,8 @@ def get_config():
 
     if config.resume:
         config.best = False
+
+    config.logs_dir = os.path.join(config.logs_dir, config.num_model)
 
     return config
 
