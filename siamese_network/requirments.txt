@@ -6,3 +6,4 @@ tqdm
 wget
 fire
 Augmentor
+tensorboard
