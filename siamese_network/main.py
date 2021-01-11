@@ -4,6 +4,7 @@ from config_maker import get_config
 from trainer import Trainer
 from utils import *
 from data_prepare import *
+from model import SiameseNet
 
 
 def print_status(string):
@@ -75,5 +76,9 @@ def download_data():
     print("DONE")
 
 
+def print_parameters():
+    count_parameters(SiameseNet())
+
+
 if __name__ == '__main__':
-    Fire({"run": run, "download-data": download_data, "train": train, "test": test, })
+    Fire({"run": run, "download-data": download_data, "train": train, "test": test, "param": print_parameters()})

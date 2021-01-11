@@ -5,6 +5,7 @@ from glob import glob
 from zipfile import ZipFile
 
 import wget
+from prettytable import PrettyTable
 
 
 class AverageMeter(object):
@@ -96,3 +97,17 @@ def download_omniglot_data():
             os.rename(BASEDIR + '/unzip/images_evaluation', BASEDIR + '/unzip/evaluation')
         except FileNotFoundError as e:
             print(e)
+
+
+def count_parameters(model):
+    table = PrettyTable(["Modules", "Parameters"])
+    total_params = 0
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad:
+            continue
+        param = parameter.numel()
+        table.add_row([name, param])
+        total_params += param
+    print(table)
+    print(f"Total Trainable Params: {total_params}")
+    return total_params
