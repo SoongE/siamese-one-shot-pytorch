@@ -57,8 +57,10 @@ class Trainer(object):
             start_epoch = 0
             best_valid_acc = 0
 
-        # create tensorboard summary
+        # create tensorboard summary and add model structure.
         writer = SummaryWriter(os.path.join(self.config.logs_dir, 'logs'), filename_suffix=self.config.num_model)
+        im1, im2, y = next(iter(valid_loader))
+        writer.add_graph(model, [im1.to(self.device), im2.to(self.device)])
 
         counter = 0
         num_train = len(train_loader)
@@ -121,8 +123,8 @@ class Trainer(object):
                     # compute acc and log
                     valid_acc = correct_sum / num_valid
                     writer.add_scalar("Loss/Valid", valid_losses.val, epoch * len(valid_loader) + i)
-                    writer.add_scalar("Acc/Valid", valid_acc, epoch * len(valid_loader) + i)
                     valid_pbar.set_postfix_str(f"accuracy: {valid_acc:0.3f}")
+            writer.add_scalar("Acc/Valid", valid_acc, epoch)
 
             # check for improvement
             if valid_acc > best_valid_acc:
@@ -155,7 +157,7 @@ class Trainer(object):
             tqdm.write(
                 f"[{epoch}] train loss: {train_losses.avg:.3f} - valid loss: {valid_losses.avg:.3f} - valid acc: {valid_acc:.3f} {'[BEST]' if is_best else ''}")
 
-            # release resources
+        # release resources
         writer.close()
 
     def test(self):
