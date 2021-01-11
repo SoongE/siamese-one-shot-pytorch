@@ -1,6 +1,5 @@
 import os
 import random
-from random import Random
 
 import Augmentor
 import numpy as np
