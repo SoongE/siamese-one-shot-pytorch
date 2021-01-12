@@ -43,9 +43,9 @@ class Trainer(object):
         # Model, Optimizer, criterion
         model = SiameseNet()
         if self.config.optimizer == "SGD":
-            optimizer = optim.SGD(model.parameters(), lr=3e-4, weight_decay=6e-5)
+            optimizer = optim.SGD(model.parameters(), lr=self.config.lr, weight_decay=6e-5)
         else:
-            optimizer = optim.Adam(model.parameters(), lr=3e-4, weight_decay=6e-5)
+            optimizer = optim.Adam(model.parameters(), lr=self.config.lr, weight_decay=6e-5)
         criterion = torch.nn.BCEWithLogitsLoss()
         if self.config.use_gpu:
             model.cuda()

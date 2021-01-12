@@ -44,11 +44,11 @@ train_arg.add_argument('--epochs', type=int, default=200,
                        help='# of epochs to train for')
 train_arg.add_argument('--init_momentum', type=float, default=0.5,
                        help='Initial layer-wise momentum value')
-train_arg.add_argument('--lr_patience', type=int, default=1,
-                       help='Number of epochs to wait before reducing lr')
+train_arg.add_argument('--lr', type=float, default=3e-4,
+                       help='learning rate')
 train_arg.add_argument('--train_patience', type=int, default=20,
                        help='Number of epochs to wait before stopping train')
-train_arg.add_argument('--optimizer', type=str, default="SGD",
+train_arg.add_argument('--optimizer', type=str, default="Adam",
                        help='Select optimizer "Adam" or "SGD"')
 
 # other params
