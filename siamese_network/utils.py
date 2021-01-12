@@ -34,8 +34,8 @@ def prepare_dirs(config):
         os.makedirs(os.path.join(path, 'models'))
     if config.flush:
         shutil.rmtree(path)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        os.makedirs(os.path.join(path, 'logs'))
+        os.makedirs(os.path.join(path, 'models'))
 
 
 def save_config(config):
