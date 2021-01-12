@@ -1,5 +1,6 @@
 import os
 import random
+from random import Random
 
 import Augmentor
 import numpy as np
@@ -95,36 +96,35 @@ class OmniglotTest:
         self.trials = trials
         self.way = way
         self.seed = seed
+        self.image1 = None
 
     def __len__(self):
         return self.trials * self.way
 
     def __getitem__(self, index):
+        rand = Random(self.seed + index)
         # get image pair from same class
-        # if index % 2 == 0:
         if index % self.way == 0:
-            label = 1
-            idx = random.randint(0, len(self.dataset.classes) - 1)
+            label = 1.0
+            idx = rand.randint(0, len(self.dataset.classes) - 1)
             image_list = [x for x in self.dataset.imgs if x[1] == idx]
-            image1 = random.choice(image_list)
-            image2 = random.choice(image_list)
-            while image1[0] == image2[0]:
-                image2 = random.choice(image_list)
+            self.image1 = rand.choice(image_list)
+            image2 = rand.choice(image_list)
+            while self.image1[0] == image2[0]:
+                image2 = rand.choice(image_list)
 
         # get image pair from different class
         else:
-            label = 0
-            image1 = random.choice(self.dataset.imgs)
+            label = 0.0
             image2 = random.choice(self.dataset.imgs)
-            while image1 == image2:
+            while self.image1[1] == image2[1]:
                 image2 = random.choice(self.dataset.imgs)
 
         trans = transforms.ToTensor()
 
-        image1 = Image.open(image1[0]).convert('L')
+        image1 = Image.open(self.image1[0]).convert('L')
         image2 = Image.open(image2[0]).convert('L')
         image1 = trans(image1)
         image2 = trans(image2)
-        label = torch.from_numpy(np.array(label, dtype=np.float32))
 
         return image1, image2, label

@@ -62,7 +62,7 @@ class Trainer(object):
 
         # create tensorboard summary and add model structure.
         writer = SummaryWriter(os.path.join(self.config.logs_dir, 'logs'), filename_suffix=self.config.num_model)
-        im1, im2, y = next(iter(valid_loader))
+        im1, im2, _ = next(iter(valid_loader))
         writer.add_graph(model, [im1.to(self.device), im2.to(self.device)])
 
         counter = 0
@@ -108,6 +108,7 @@ class Trainer(object):
                               leave=False)
             with torch.no_grad():
                 for i, (x1, x2, y) in valid_pbar:
+
                     if self.config.use_gpu:
                         x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
 
@@ -180,20 +181,21 @@ class Trainer(object):
         print(f"[*] Test on {num_test} pairs.")
 
         pbar = tqdm(enumerate(test_loader), total=num_test, desc="Test")
-        for i, (x1, x2, y) in pbar:
+        with torch.no_grad():
+            for i, (x1, x2, _) in pbar:
 
-            if self.config.use_gpu:
-                x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
+                if self.config.use_gpu:
+                    x1, x2 = x1.to(self.device), x2.to(self.device)
 
-            # compute log probabilities
-            out = model(x1, x2)
+                # compute log probabilities
+                out = model(x1, x2)
 
-            y_pred = torch.sigmoid(out)
-            y_pred = torch.argmax(y_pred)
-            if y_pred == 0:
-                correct_sum += 1
+                y_pred = torch.sigmoid(out)
+                y_pred = torch.argmax(y_pred)
+                if y_pred == 0:
+                    correct_sum += 1
 
-            pbar.set_postfix_str(f"accuracy: {correct_sum / num_test}")
+                pbar.set_postfix_str(f"accuracy: {correct_sum / num_test}")
 
         test_acc = (100. * correct_sum) / num_test
         print(f"Test Acc: {correct_sum}/{num_test} ({test_acc:.2f}%)")
