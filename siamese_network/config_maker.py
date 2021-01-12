@@ -48,6 +48,8 @@ train_arg.add_argument('--lr_patience', type=int, default=1,
                        help='Number of epochs to wait before reducing lr')
 train_arg.add_argument('--train_patience', type=int, default=20,
                        help='Number of epochs to wait before stopping train')
+train_arg.add_argument('--optimizer', type=str, default="SGD",
+                       help='Select optimizer "Adam" or "SGD"')
 
 # other params
 misc_arg = parser.add_argument_group('Misc.')
