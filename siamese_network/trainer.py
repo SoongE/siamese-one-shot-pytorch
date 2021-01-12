@@ -112,7 +112,7 @@ class Trainer(object):
                     out = model(x1, x2)
                     loss = criterion(out, y.unsqueeze(1))
 
-                    y_pred = torch.round(torch.sigmoid(out))
+                    y_pred = torch.sigmoid(out)
                     y_pred = torch.argmax(y_pred)
                     if y_pred == 0:
                         correct_sum += 1
@@ -178,13 +178,14 @@ class Trainer(object):
 
         pbar = tqdm(enumerate(test_loader), total=num_test, desc="Test")
         for i, (x1, x2, y) in pbar:
+
             if self.config.use_gpu:
                 x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
 
             # compute log probabilities
             out = model(x1, x2)
 
-            y_pred = torch.round(torch.sigmoid(out))
+            y_pred = torch.sigmoid(out)
             y_pred = torch.argmax(y_pred)
             if y_pred == 0:
                 correct_sum += 1
@@ -197,9 +198,9 @@ class Trainer(object):
     def save_checkpoint(self, state, is_best):
 
         if is_best:
-            filename = './models/best_model.tar'
+            filename = './models/best_model.pt'
         else:
-            filename = f'./models/model_ckpt_{state["epoch"]}.tar'
+            filename = f'./models/model_ckpt_{state["epoch"]}.pt'
 
         model_path = os.path.join(self.config.logs_dir, filename)
         torch.save(state, model_path)
@@ -207,17 +208,16 @@ class Trainer(object):
     def load_checkpoint(self, best):
         print(f"[*] Loading model Num.{self.config.num_model}...", end="")
 
-        model_path = sorted(glob(self.config.logs_dir + './models/model_ckpt_*'), key=len)[-1]
-
         if best:
-            filename = './models/best_model.tar'
-            model_path = os.path.join(self.config.logs_dir, filename)
+            model_path = os.path.join(self.config.logs_dir, './models/best_model.pt')
+        else:
+            model_path = sorted(glob(self.config.logs_dir + './models/model_ckpt_*.pt'), key=len)[-1]
 
         ckpt = torch.load(model_path)
 
         if best:
             print(
-                f"Loaded {filename} checkpoint @ epoch {ckpt['epoch']} with best valid acc of {ckpt['best_valid_acc']:.3f}")
+                f"Loaded {os.path.basename(model_path)} checkpoint @ epoch {ckpt['epoch']} with best valid acc of {ckpt['best_valid_acc']:.3f}")
         else:
             print(f"Loaded {os.path.basename(model_path)} checkpoint @ epoch {ckpt['epoch']}")
 
