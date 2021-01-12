@@ -71,10 +71,16 @@ class OmniglotTrain(Dataset):
             p.random_distortion(0.5, 6, 6, 10)
             trans = transforms.Compose([
                 p.torch_transform(),
+                transforms.Resize(35),
                 transforms.ToTensor(),
+                transforms.Normalize(mean=0.5, std=0.5)
             ])
         else:
-            trans = transforms.ToTensor()
+            trans = transforms.Compose([
+                transforms.Resize(35),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=0.5, std=0.5)
+            ])
 
         image1 = Image.open(image1[0]).convert('L')
         image2 = Image.open(image2[0]).convert('L')
@@ -115,7 +121,10 @@ class OmniglotTest:
             while image1 == image2:
                 image2 = random.choice(self.dataset.imgs)
 
-        trans = transforms.ToTensor()
+        trans = transforms.Compose([
+            transforms.Resize(35),
+            transforms.ToTensor(),
+        ])
 
         image1 = Image.open(image1[0]).convert('L')
         image2 = Image.open(image2[0]).convert('L')
