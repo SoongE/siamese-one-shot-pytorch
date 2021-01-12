@@ -81,4 +81,4 @@ def print_parameters():
 
 
 if __name__ == '__main__':
-    Fire({"run": run, "download-data": download_data, "train": train, "test": test, "param": print_parameters()})
+    Fire({"run": run, "download-data": download_data, "train": train, "test": test, "param": print_parameters})
