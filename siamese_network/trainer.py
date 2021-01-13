@@ -57,10 +57,15 @@ class Trainer(object):
             start_epoch, best_epoch, best_valid_acc, model_state, optim_state = self.load_checkpoint(best=False)
             model.load_state_dict(model_state)
             optimizer.load_state_dict(optim_state)
+            one_cycle = OneCyclePolicy(optimizer, self.config.lr,
+                                       (self.config.epochs - start_epoch) * len(train_loader),
+                                       momentum_rng=[0.85, 0.95])
         else:
             best_epoch = 0
             start_epoch = 0
             best_valid_acc = 0
+            one_cycle = OneCyclePolicy(optimizer, self.config.lr, self.config.epochs * len(train_loader),
+                                       momentum_rng=[0.85, 0.95])
 
         # create tensorboard summary and add model structure.
         writer = SummaryWriter(os.path.join(self.config.logs_dir, 'logs'), filename_suffix=self.config.num_model)
@@ -70,7 +75,6 @@ class Trainer(object):
         counter = 0
         num_train = len(train_loader)
         num_valid = len(valid_loader)
-        one_cycle = OneCyclePolicy(optimizer, self.config.lr, self.config.epochs * num_train, momentum_rng=[0.85, 0.95])
         print(
             f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {valid_loader.dataset.trials} trials")
 
