@@ -58,6 +58,8 @@ def load_config(config):
 
     config.__dict__.update(params)
 
+    config.resume = True
+
     return config
 
 

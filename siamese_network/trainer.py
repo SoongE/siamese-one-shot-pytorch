@@ -9,6 +9,7 @@ from tqdm import tqdm
 from data_loader import get_train_validation_loader, get_test_loader
 from model import SiameseNet
 from utils import AverageMeter
+from scheduler import OneCyclePolicy
 
 
 class Trainer(object):
@@ -43,10 +44,11 @@ class Trainer(object):
         # Model, Optimizer, criterion
         model = SiameseNet()
         if self.config.optimizer == "SGD":
-            optimizer = optim.SGD(model.parameters(), lr=self.config.lr, weight_decay=6e-5)
+            optimizer = optim.SGD(model.parameters(), lr=self.config.lr)
         else:
-            optimizer = optim.Adam(model.parameters(), lr=self.config.lr, weight_decay=6e-5)
+            optimizer = optim.Adam(model.parameters())
         criterion = torch.nn.BCEWithLogitsLoss()
+
         if self.config.use_gpu:
             model.cuda()
 
@@ -68,11 +70,12 @@ class Trainer(object):
         counter = 0
         num_train = len(train_loader)
         num_valid = len(valid_loader)
+        one_cycle = OneCyclePolicy(optimizer, self.config.lr, self.config.epochs * num_train, momentum_rng=[0.85, 0.95])
         print(
             f"[*] Train on {len(train_loader.dataset)} sample pairs, validate on {valid_loader.dataset.trials} trials")
 
         # Train & Validation
-        main_pbar = tqdm(range(0, self.config.epochs), initial=start_epoch, position=0,
+        main_pbar = tqdm(range(start_epoch, self.config.epochs), initial=start_epoch, position=0,
                          total=self.config.epochs, ncols=100, desc="Process")
         for epoch in main_pbar:
             train_losses = AverageMeter()
@@ -92,6 +95,7 @@ class Trainer(object):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                one_cycle.step()
 
                 # store batch statistics
                 train_losses.update(loss.item(), x1.shape[0])
