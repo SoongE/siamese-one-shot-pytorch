@@ -152,7 +152,7 @@ class Trainer(object):
             if is_best or epoch % 5 == 0 or epoch == self.config.epochs:
                 self.save_checkpoint(
                     {
-                        'epoch': epoch + 1,
+                        'epoch': epoch,
                         'model_state': model.state_dict(),
                         'optim_state': optimizer.state_dict(),
                         'best_valid_acc': best_valid_acc,
