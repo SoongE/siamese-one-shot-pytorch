@@ -43,6 +43,8 @@ class OmniglotTrain(Dataset):
         self.dataset = dataset
         self.num_train = num_train
         self.augment = augment
+        self.mean = 0.8444
+        self.std = 0.5329
 
     def __len__(self):
         return self.num_train
@@ -73,12 +75,12 @@ class OmniglotTrain(Dataset):
             trans = transforms.Compose([
                 p.torch_transform(),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=0.5, std=0.5)
+                transforms.Normalize(mean=self.mean, std=self.std)
             ])
         else:
             trans = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize(mean=0.5, std=0.5)
+                transforms.Normalize(mean=self.mean, std=self.std)
             ])
 
         image1 = Image.open(image1[0]).convert('L')
@@ -97,6 +99,8 @@ class OmniglotTest:
         self.way = way
         self.seed = seed
         self.image1 = None
+        self.mean = 0.8444
+        self.std = 0.5329
 
     def __len__(self):
         return self.trials * self.way
@@ -120,7 +124,10 @@ class OmniglotTest:
             while self.image1[1] == image2[1]:
                 image2 = random.choice(self.dataset.imgs)
 
-        trans = transforms.ToTensor()
+        trans = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=self.mean, std=self.std)
+        ])
 
         image1 = Image.open(self.image1[0]).convert('L')
         image2 = Image.open(image2[0]).convert('L')
