@@ -1,0 +1,10 @@
+pytorch
+torchvision
+sklearn
+pillow
+tqdm
+wget
+fire
+Augmentor
+tensorboard
+prettytable

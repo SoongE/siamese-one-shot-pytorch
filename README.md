@@ -10,17 +10,29 @@ You can run one shot learning step by step. Also, I posted the details of the co
 
 ### 🚀How to run
 
-All executions begin at the location of `./siamese`. You can execute three action. *just run*, *download-data*, *train*, *test*.
+You can execute three action. *just run*, *download-data*, *train*, *test*.
 
-1. #### Run
+1. #### Clone
 
-   This commend automatically executes the entire process according to `config_maker`. If you just want to try this network, I recommend this.
+   Clone this repository and go into the directory.
+
+   ```bash
+   git clone https://github.com/Rhcsky/siamese-one-shot-pytorch.git
+   
+   cd siamese-one-shot-pytorch
+   ```
+
+2. #### Run
+
+   This commend automatically executes the entire process according to `config_maker`(download data + train + test).
+
+   If you just want to try this network, I recommend this.
 
    ```bash
    python main.py run
    ```
 
-2. #### Download-data
+3. #### Download-data
 
    The Omniglot data is downloaded and divided into 30 types of train data, 10 types of validation data, and 10 types of test data. All data is contained in `./data/processed/`.
 
@@ -28,7 +40,7 @@ All executions begin at the location of `./siamese`. You can execute three actio
    python main.py download-data
    ```
 
-3. #### Train
+4. #### Train
 
    Only model learning is conducted. If you want to run 'train', you have to run 'download-data' first.
 
@@ -36,7 +48,7 @@ All executions begin at the location of `./siamese`. You can execute three actio
    python main.py train
    ```
 
-4. #### Test
+5. #### Test
 
    Only test the model. Stored models and datasets must exist.
 
@@ -48,7 +60,7 @@ All parameters are present in `config_maker`. If you want to adjust the paramete
 
 
 
-### Result
+### Check Result
 
 Train logs, saved model and configuration data were in `./result/[model_number]`.  Logs are made by `tensorboard`. So if you want to see more detail about train metrics, write commend on `./siamese_network/result/[model_number]`  like this.
 
@@ -59,8 +71,6 @@ tensorboard --logdir=logs
 
 
 ### 📌Reference
-
-siamese network
 
 * [Siamese Neural Networks for One-shot Image Recognition](https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf)
 
