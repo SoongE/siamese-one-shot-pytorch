@@ -22,14 +22,15 @@ def prepare_data():
     background_dir = "data/unzip/background"
     evaluation_dir = "data/unzip/evaluation"
     processed_dir = "data/processed"
+    
+    train_dir = os.path.join(processed_dir, 'train')
+    val_dir = os.path.join(processed_dir, 'val')
+    test_dir = os.path.join(processed_dir, 'test')
+    
     random.seed(5)
 
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
-        os.makedirs(processed_dir +'/train')
-        os.makedirs(processed_dir +'/val')
-        os.makedirs(processed_dir +'/test')
-        
 
     if any([True for _ in os.scandir(processed_dir)]):
         return
@@ -51,6 +52,10 @@ def prepare_data():
     train_dir = os.path.join(processed_dir, 'train')
     val_dir = os.path.join(processed_dir, 'val')
     test_dir = os.path.join(processed_dir, 'test')
+
+    print(len(train_alpha))
+    print(len(val_alpha))
+    print(len(test_alpha))
 
     move_image_to_processed_dir(train_alpha, train_dir, 'train')
     move_image_to_processed_dir(val_alpha, val_dir, 'val')

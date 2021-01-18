@@ -63,7 +63,7 @@ misc_arg.add_argument('--best', type=str2bool, default=True,
                       help='Load best model or most recent for testing')
 misc_arg.add_argument('--seed', type=int, default=1,
                       help='Seed to ensure reproducibility')
-misc_arg.add_argument('--data_dir', type=str, default='../data/processed/',
+misc_arg.add_argument('--data_dir', type=str, default='./data/processed/',
                       help='Directory in which data is stored')
 misc_arg.add_argument('--logs_dir', type=str, default='./result/',
                       help='Directory in which logs wil be stored')
