@@ -1,14 +1,4 @@
-# Meta Learning with omniglot dataset using pytorch
-
-There are 4 way to verify the `Omniglot Dataset`. 3 Few shot Learning, 1 One Shot learning(Siamese network)
-
-* <p>
-    <a href="##siamese-network-for-one-shot-learning">Siamese network for one shot learning</a>
-  </p>
-
-
-
-## Siamese network for one shot learning
+# Siamese network for one shot learning
 
 A implementation of the paper : [Siamese Neural Networks for One-shot Image Recognition](https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf) using pytorch. In the model, somethings, such as learning rates or regression, may differ from the original paper.
 
