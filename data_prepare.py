@@ -22,11 +22,7 @@ def prepare_data():
     background_dir = "data/unzip/background"
     evaluation_dir = "data/unzip/evaluation"
     processed_dir = "data/processed"
-    
-    train_dir = os.path.join(processed_dir, 'train')
-    val_dir = os.path.join(processed_dir, 'val')
-    test_dir = os.path.join(processed_dir, 'test')
-    
+
     random.seed(5)
 
     if not os.path.exists(processed_dir):
@@ -45,6 +41,7 @@ def prepare_data():
 
     # Split background data into train, validation data and make test data
     train_alpha = list(np.random.choice(back_alpha, size=30, replace=False))
+    train_alpha = [str(x) for x in train_alpha]
     val_alpha = [x for x in back_alpha if x not in train_alpha]
     test_alpha = [x for x in glob(evaluation_dir + '/*')]
     test_alpha.sort()
@@ -52,10 +49,6 @@ def prepare_data():
     train_dir = os.path.join(processed_dir, 'train')
     val_dir = os.path.join(processed_dir, 'val')
     test_dir = os.path.join(processed_dir, 'test')
-
-    print(len(train_alpha))
-    print(len(val_alpha))
-    print(len(test_alpha))
 
     move_image_to_processed_dir(train_alpha, train_dir, 'train')
     move_image_to_processed_dir(val_alpha, val_dir, 'val')
